@@ -7,10 +7,16 @@ DOWN = 1
 LEFT = 3
 RIGHT = 4
 
+MAX_WAIT = 0.1
+MIN_WAIT = 0.03
+WAIT_STEP = 0.005
+
 def main(stdscr):
     stdscr.clear()
 
     snake = [(0, 0)]
+
+    wait = MAX_WAIT
 
     head_x = 0
     head_y = 0
@@ -30,19 +36,14 @@ def main(stdscr):
         if k == ord('q'):
             break
 
-        if k == curses.KEY_UP and dir != DOWN:
+        if k == curses.KEY_UP and (dir != DOWN or score == 0):
             dir = UP
-        elif k == curses.KEY_DOWN and dir != UP:
+        elif k == curses.KEY_DOWN and (dir != UP or score == 0):
             dir = DOWN
-        elif k == curses.KEY_LEFT and dir != RIGHT:
+        elif k == curses.KEY_LEFT and (dir != RIGHT or score == 0):
             dir = LEFT
-        elif k == curses.KEY_RIGHT and dir != LEFT:
+        elif k == curses.KEY_RIGHT and (dir != LEFT or score == 0):
             dir = RIGHT
-
-        i = len(snake) - 1
-        while i > 0:
-            snake[i] = snake[i - 1]
-            i -= 1
 
         if dir == UP:
             head_y = head_y - 1 if head_y > 0 else curses.LINES - 2
@@ -59,11 +60,20 @@ def main(stdscr):
             snake.append((0, 0))
             score += 1
 
+            if wait > MIN_WAIT:
+                wait -= WAIT_STEP
+
+        i = len(snake) - 1
+        while i > 0:
+            snake[i] = snake[i - 1]
+            i -= 1
+
         snake[0] = (head_x, head_y)
 
         for i in range(1, len(snake)):
             if snake[0] == snake[i]:
                 snake = [snake[0]]
+                wait = MAX_WAIT
                 score = 0
                 break
 
@@ -76,6 +86,6 @@ def main(stdscr):
         stdscr.addstr(curses.LINES - 1, 0, "Score: {}, head coordinates: ({}, {}), Q - Quit".format(score, head_x, head_y))
         stdscr.refresh()
 
-        time.sleep(0.1)
+        time.sleep(wait)
 
 curses.wrapper(main)
